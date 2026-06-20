@@ -36,13 +36,19 @@ enum ResultadoPartida {
 model Partida {
   id                Int      @id @default(autoincrement())
   userId            Int
+
   valorEntrada      Float
   multiplicadorMeta Float
   valorMeta         Float
+
+  valorPorPlataforma Float
+
   status            String
 
   resultado         ResultadoPartida?
   valorFinal        Float?
+
+  plataformasPassadas Int? @default(0)
 
   createdAt         DateTime @default(now())
 
