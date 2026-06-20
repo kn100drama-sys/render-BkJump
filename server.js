@@ -1256,7 +1256,7 @@ app.get('/api/public/config', (req, res) => {
   res.json({
     site_nome: "Bk Jump",
     site_suporte: "",
-    site_promo: "Decida quando parar. Multiplique seus ganhos. 🚀",
+    site_promo: "🚀 O próximo salto pode mudar tudo.",
 
     site_termos: `
 
@@ -1470,7 +1470,7 @@ app.post('/api/game/iniciar', async (req, res) => {
     const mult = Number(multiplicador_meta || 2);
 
     const valorPorPlataforma =
-      (Number(valor_entrada) * mult) / 1;
+      Number(valor_entrada) * 0.10;
 
     const partida = await prisma.partida.create({
       data: {
