@@ -1453,9 +1453,10 @@ app.post('/api/game/iniciar', async (req, res) => {
         valorEntrada: Number(valor_entrada),
         multiplicadorMeta: mult,
         valorMeta: Number(valor_entrada) * mult,
+        valorPorPlataforma,
+        plataformasPassadas: 0,
         status: 'ativa',
 
-        // 🆕 novos campos já inicializados
         resultado: null,
         valorFinal: null
       }
@@ -1470,15 +1471,15 @@ app.post('/api/game/iniciar', async (req, res) => {
       }
     });
 
-    return res.json({
-      partida_id: partida.id,
-      valor_entrada: partida.valorEntrada,
-      multiplicador_meta: partida.multiplicadorMeta,
-      valor_meta: partida.valorMeta,
-      valor_por_plataforma: Number(valor_entrada) / 5,
-      plataformas_referencia: [1, 2, 3, 4, 5],
-      saldo: novoSaldo
-    });
+  return res.json({
+    partida_id: partida.id,
+    valor_entrada: partida.valorEntrada,
+    multiplicador_meta: partida.multiplicadorMeta,
+    valor_meta: partida.valorMeta,
+    valor_por_plataforma: partida.valorPorPlataforma,
+    plataformas_referencia: [1, 2, 3, 4, 5],
+    saldo: novoSaldo
+  });
 
   } catch (error) {
     console.error(error);
@@ -1491,7 +1492,11 @@ app.post('/api/game/iniciar', async (req, res) => {
 
 app.post('/api/game/finalizar', async (req, res) => {
   try {
-    const { partida_id, resgatou } = req.body;
+    const {
+      partida_id,
+      plataformas_passadas,
+      resgatou
+    } = req.body;
 
     const partida = await prisma.partida.findUnique({
       where: {
@@ -1500,8 +1505,15 @@ app.post('/api/game/finalizar', async (req, res) => {
     });
 
     if (!partida) {
+      return res.status(404).json({
+        error: 'Partida não encontrada'
+      });
+    }
+
+    // Evita finalizar duas vezes
+    if (partida.status === 'finalizada') {
       return res.status(400).json({
-        error: 'Partida inválida'
+        error: 'Partida já finalizada'
       });
     }
 
@@ -1517,18 +1529,23 @@ app.post('/api/game/finalizar', async (req, res) => {
       });
     }
 
+    const plataformas = Number(plataformas_passadas || 0);
+
     let ganho = 0;
-    let resultado = 'PERDEU';
     let valorFinal = 0;
+    let resultado = 'PERDEU';
 
-    // 🟢 Se resgatou (ganhou)
     if (resgatou) {
-      ganho =
-        Number(partida.valorEntrada) *
-        Number(partida.multiplicadorMeta);
 
-      resultado = 'GANHOU';
+      ganho =
+        plataformas *
+        Number(partida.valorPorPlataforma);
+
+      ganho = Number(ganho.toFixed(2));
+
+
       valorFinal = ganho;
+      resultado = 'GANHOU';
 
       await prisma.user.update({
         where: {
@@ -1540,21 +1557,18 @@ app.post('/api/game/finalizar', async (req, res) => {
           }
         }
       });
-    } else {
-      // 🔴 perdeu
-      resultado = 'PERDEU';
-      valorFinal = 0;
+
     }
 
-    // 💾 Atualiza partida com novos campos
     await prisma.partida.update({
       where: {
         id: partida.id
       },
       data: {
         status: 'finalizada',
-        resultado: resultado,
-        valorFinal: valorFinal
+        resultado,
+        valorFinal,
+        plataformasPassadas: plataformas
       }
     });
 
@@ -1564,17 +1578,18 @@ app.post('/api/game/finalizar', async (req, res) => {
       }
     });
 
-    res.json({
-      ganho,
+    return res.json({
+      success: true,
       resultado,
-      valorFinal,
-      saldo: usuarioAtualizado.saldo
+      plataformas_passadas: plataformas,
+      valor_ganho_ou_perdido: valorFinal,
+      saldo_novo: usuarioAtualizado.saldo
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Erro finalizar partida:', error);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Erro ao finalizar partida'
     });
   }
