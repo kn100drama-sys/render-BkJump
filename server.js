@@ -1447,6 +1447,9 @@ app.post('/api/game/iniciar', async (req, res) => {
 
     const mult = Number(multiplicador_meta || 2);
 
+    const valorPorPlataforma =
+      (Number(valor_entrada) * mult) / 5;
+
     const partida = await prisma.partida.create({
       data: {
         userId: user.id,
@@ -1456,7 +1459,6 @@ app.post('/api/game/iniciar', async (req, res) => {
         valorPorPlataforma,
         plataformasPassadas: 0,
         status: 'ativa',
-
         resultado: null,
         valorFinal: null
       }
