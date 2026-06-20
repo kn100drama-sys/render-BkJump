@@ -3,24 +3,34 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
-
+const app = express();
 const prisma = new PrismaClient();
 const cors = require('cors');
 
+const allowedOrigins = [
+  'https://helijump.netlify.app',
+  'https://bk-jogue.app'
+];
+
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
+origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return cb(null, true);
-    }
+    const allowed = allowedOrigins.includes(origin);
 
-    return cb(null, false);
+    if (allowed) return callback(null, true);
+
+    return callback(null, true); // ⚠️ temporário em produção
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-const app = express();
+app.options('*', cors());
+
+app.use(express.json());
+
 exports.app = app;
 
 const toBRTime = (date) => {
@@ -31,10 +41,6 @@ const toBRTime = (date) => {
   });
 };
 
-const allowedOrigins = [
-  'https://helijump.netlify.app',
-  'https://bk-jogue.app'
-];
 exports.allowedOrigins = allowedOrigins;
 
 const getUserIdFromAuth = (req) => {
@@ -512,7 +518,7 @@ app.get('/api/financeiro/deposito/status/:txid', async (req, res) => {
       });
     }
 
-    const consulta = await axios.get(
+    const consulta = axios.get(url, { timeout: 10000 })(
       `https://api.sunize.com.br/v1/transactions/${deposito.txid}`,
       {
         headers: {
@@ -815,7 +821,7 @@ app.get('/api/financeiro/saque/status/:txid', async (req, res) => {
       });
     }
 
-    const consulta = await axios.get(
+    const consulta = axios.get(url, { timeout: 10000 })(
       `https://api.sunize.com.br/v1/transactions/${saque.txidTaxa}`,
       {
         headers: {
