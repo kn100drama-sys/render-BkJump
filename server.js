@@ -5,6 +5,20 @@ const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
+const cors = require('cors');
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
+  credentials: true
+}));
 
 const app = express();
 exports.app = app;
@@ -19,8 +33,7 @@ const toBRTime = (date) => {
 
 const allowedOrigins = [
   'https://helijump.netlify.app',
-  'https://bk-jogue.app',
-  '192.168.100.64'
+  'https://bk-jogue.app'
 ];
 exports.allowedOrigins = allowedOrigins;
 
@@ -40,9 +53,7 @@ const getUserIdFromAuth = (req) => {
 function originGuard(req, res, next) {
   const origin = req.headers.origin;
 
-  if (!origin) {
-    return res.status(403).json({ error: 'Sem origin' });
-  }
+  if (!origin) return next();
 
   if (!allowedOrigins.includes(origin)) {
     return res.status(403).json({ error: 'Origem não permitida' });
@@ -51,8 +62,9 @@ function originGuard(req, res, next) {
   next();
 }
 
-app.use(originGuard);
-
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
 
 // ─────────────────────────────
 // TESTE
