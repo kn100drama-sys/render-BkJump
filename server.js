@@ -1256,7 +1256,7 @@ app.get('/api/public/config', (req, res) => {
   res.json({
     site_nome: "Bk Jump",
     site_suporte: "",
-    site_promo: "Ganhe jogando agora!",
+    site_promo: "Decida quando parar. Multiplique seus ganhos. 🚀",
 
     site_termos: `
 
