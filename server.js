@@ -774,17 +774,6 @@ app.post('/api/financeiro/saque', async (req, res) => {
       }
     });
 
-    await prisma.user.update({
-  where: {
-    id: user.id
-  },
-  data: {
-    saldo: {
-      decrement: Number(valor)
-    }
-  }
-});
-
     return res.json({
       sucesso: true,
       saque_id: saque.id,
@@ -825,16 +814,16 @@ app.get('/api/financeiro/saque/status/:txid', async (req, res) => {
       });
     }
 
-      const consulta = await axios.get(
-        `https://api.sunize.com.br/v1/transactions/${deposito.txid}`,
-        {
-          headers: {
-            'x-api-key': process.env.SUNIZE_API_KEY,
-            'x-api-secret': process.env.SUNIZE_API_SECRET
-          },
-          timeout: 10000
-        }
-      );
+    const consulta = await axios.get(
+      `https://api.sunize.com.br/v1/transactions/${saque.txidTaxa}`,
+      {
+        headers: {
+          'x-api-key': process.env.SUNIZE_API_KEY,
+          'x-api-secret': process.env.SUNIZE_API_SECRET
+        },
+        timeout: 10000
+      }
+    );
 
       const trx = consulta.data;
 
@@ -1222,6 +1211,35 @@ app.get('/api/financeiro/saque-afiliado', async (req, res) => {
 // ─────────────────────────────
 // CONFIG DO JOGO
 // ─────────────────────────────
+
+app.post('/api/game/heartbeat', async (req, res) => {
+  try {
+    const userId = getUserIdFromAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Token inválido'
+      });
+    }
+
+    const { partida_id, plataformas } = req.body;
+
+    return res.json({
+      success: true,
+      partida_id,
+      plataformas,
+      serverTime: Date.now()
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: 'Erro heartbeat'
+    });
+  }
+});
+
 app.get('/api/game/configs', (req, res) => {
   res.json({
     aposta_min: 1,
