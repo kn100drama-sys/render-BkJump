@@ -1259,13 +1259,27 @@ app.get('/api/public/config', (req, res) => {
     site_promo: "Ganhe jogando agora!",
 
     site_termos: `
-Bem-vindo ao BK Jump.
 
-1. O usuário deve ser maior de 18 anos.
-2. Cada usuário pode possuir apenas uma conta.
-3. Fraudes ou tentativas de manipulação resultarão em bloqueio permanente.
-4. Saques podem passar por análise de segurança.
-5. Ao utilizar a plataforma você concorda com estes termos.
+Ao criar uma conta e utilizar a plataforma, o usuário declara que possui 18 anos ou mais e concorda com os presentes Termos de Uso.
+
+1. O usuário é responsável pelas informações fornecidas em seu cadastro e pela segurança de sua conta.
+
+2. Cada usuário poderá possuir apenas uma conta, salvo autorização expressa da plataforma.
+
+3. O jogo envolve risco de perda financeira. Os resultados são aleatórios e não há garantia de ganhos.
+
+4. Depósitos e saques poderão passar por verificações de segurança e identidade.
+
+5. É proibido utilizar bots, scripts, documentos falsos, múltiplas contas ou qualquer prática fraudulenta.
+
+6. Contas com indícios de fraude, abuso ou violação destes termos poderão ser suspensas ou encerradas sem aviso prévio.
+
+7. A plataforma poderá alterar promoções, regras e estes termos a qualquer momento.
+
+8. Ao utilizar a plataforma, o usuário reconhece que participa por sua própria conta e risco e concorda com todas as regras aqui estabelecidas.
+
+Em caso de dúvidas, entre em contato com o suporte da plataforma.
+
 `
   });
 });
@@ -1456,7 +1470,7 @@ app.post('/api/game/iniciar', async (req, res) => {
     const mult = Number(multiplicador_meta || 2);
 
     const valorPorPlataforma =
-      (Number(valor_entrada) * mult) / 5;
+      (Number(valor_entrada) * mult) / 1;
 
     const partida = await prisma.partida.create({
       data: {
@@ -1541,18 +1555,17 @@ app.post('/api/game/finalizar', async (req, res) => {
 
     const plataformas = Number(plataformas_passadas || 0);
 
+    const valorPotencial =
+      plataformas *
+      Number(partida.valorPorPlataforma);
+
     let ganho = 0;
     let valorFinal = 0;
     let resultado = 'PERDEU';
 
     if (resgatou) {
 
-      ganho =
-        plataformas *
-        Number(partida.valorPorPlataforma);
-
-      ganho = Number(ganho.toFixed(2));
-
+      ganho = Number(valorPotencial.toFixed(2));
 
       valorFinal = ganho;
       resultado = 'GANHOU';
@@ -1567,6 +1580,10 @@ app.post('/api/game/finalizar', async (req, res) => {
           }
         }
       });
+
+    } else {
+
+      valorFinal = Number(valorPotencial.toFixed(2));
 
     }
 
