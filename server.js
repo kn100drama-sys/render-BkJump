@@ -8,14 +8,14 @@ const prisma = new PrismaClient();
 const cors = require('cors');
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
 
     if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      return cb(null, true);
     }
 
-    return callback(null, false);
+    return cb(null, false);
   },
   credentials: true
 }));
@@ -49,18 +49,6 @@ const getUserIdFromAuth = (req) => {
 
   return userId;
 };
-
-function originGuard(req, res, next) {
-  const origin = req.headers.origin;
-
-  if (!origin) return next();
-
-  if (!allowedOrigins.includes(origin)) {
-    return res.status(403).json({ error: 'Origem não permitida' });
-  }
-
-  next();
-}
 
 process.on('beforeExit', async () => {
   await prisma.$disconnect();
