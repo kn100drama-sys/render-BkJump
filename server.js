@@ -19,7 +19,8 @@ const toBRTime = (date) => {
 
 const allowedOrigins = [
   'https://helijump.netlify.app',
-  'https://bk-jogue.app'
+  'https://bk-jogue.app',
+  '192.168.100.64'
 ];
 exports.allowedOrigins = allowedOrigins;
 
@@ -1561,6 +1562,8 @@ app.get('/api/health', (req, res) => {
 // ─────────────────────────────
 // START SERVER
 // ─────────────────────────────
-app.listen(3000, '0.0.0.0', () => {
-  console.log('🚀 Backend rodando em http://192.168.100.64:3000');
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend rodando na porta ${PORT}`);
 });
