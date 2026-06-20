@@ -9,7 +9,12 @@ const cors = require('cors');
 
 const allowedOrigins = [
   'https://helijump.netlify.app',
-  'https://bk-jogue.app'
+  'https://bk-jogue.app',
+  'localhost',
+  '127.0.0.1',
+  'meusite.com',
+  'www.meusite.com',
+  '192.168.100.64'
 ];
 
 app.use(cors({
@@ -26,8 +31,6 @@ origin: function (origin, callback) {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-app.options('*', cors());
 
 app.use(express.json());
 
@@ -518,13 +521,14 @@ app.get('/api/financeiro/deposito/status/:txid', async (req, res) => {
       });
     }
 
-    const consulta = axios.get(url, { timeout: 10000 })(
+    const consulta = await axios.get(
       `https://api.sunize.com.br/v1/transactions/${deposito.txid}`,
       {
         headers: {
           'x-api-key': process.env.SUNIZE_API_KEY,
           'x-api-secret': process.env.SUNIZE_API_SECRET
-        }
+        },
+        timeout: 10000
       }
     );
 
@@ -821,17 +825,18 @@ app.get('/api/financeiro/saque/status/:txid', async (req, res) => {
       });
     }
 
-    const consulta = axios.get(url, { timeout: 10000 })(
-      `https://api.sunize.com.br/v1/transactions/${saque.txidTaxa}`,
-      {
-        headers: {
-          'x-api-key': process.env.SUNIZE_API_KEY,
-          'x-api-secret': process.env.SUNIZE_API_SECRET
+      const consulta = await axios.get(
+        `https://api.sunize.com.br/v1/transactions/${deposito.txid}`,
+        {
+          headers: {
+            'x-api-key': process.env.SUNIZE_API_KEY,
+            'x-api-secret': process.env.SUNIZE_API_SECRET
+          },
+          timeout: 10000
         }
-      }
-    );
+      );
 
-    const trx = consulta.data;
+      const trx = consulta.data;
 
     // ✔️ quando taxa foi paga
     if (
