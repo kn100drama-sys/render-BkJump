@@ -1255,10 +1255,18 @@ app.get('/api/game/configs', (req, res) => {
 app.get('/api/public/config', (req, res) => {
   res.json({
     site_nome: "Bk Jump",
-    site_logo_url: "https://i.imgur.com/yourlogo.png",
-    site_favicon_url: "",
     site_suporte: "",
-    site_promo: "Ganhe jogando agora!"
+    site_promo: "Ganhe jogando agora!",
+
+    site_termos: `
+Bem-vindo ao BK Jump.
+
+1. O usuário deve ser maior de 18 anos.
+2. Cada usuário pode possuir apenas uma conta.
+3. Fraudes ou tentativas de manipulação resultarão em bloqueio permanente.
+4. Saques podem passar por análise de segurança.
+5. Ao utilizar a plataforma você concorda com estes termos.
+`
   });
 });
 
@@ -1531,39 +1539,36 @@ app.post('/api/game/finalizar', async (req, res) => {
       });
     }
 
-const plataformas = Number(plataformas_passadas || 0);
+    const plataformas = Number(plataformas_passadas || 0);
 
-const valorPotencial =
-  plataformas *
-  Number(partida.valorPorPlataforma);
+    let ganho = 0;
+    let valorFinal = 0;
+    let resultado = 'PERDEU';
 
-let ganho = 0;
-let valorFinal = 0;
-let resultado = 'PERDEU';
+    if (resgatou) {
 
-if (resgatou) {
+      ganho =
+        plataformas *
+        Number(partida.valorPorPlataforma);
 
-  ganho = Number(valorPotencial.toFixed(2));
+      ganho = Number(ganho.toFixed(2));
 
-  valorFinal = ganho;
-  resultado = 'GANHOU';
 
-  await prisma.user.update({
-    where: {
-      id: user.id
-    },
-    data: {
-      saldo: {
-        increment: ganho
-      }
+      valorFinal = ganho;
+      resultado = 'GANHOU';
+
+      await prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          saldo: {
+            increment: ganho
+          }
+        }
+      });
+
     }
-  });
-
-} else {
-
-  valorFinal = Number(valorPotencial.toFixed(2));
-
-}
 
     await prisma.partida.update({
       where: {
