@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  nome            String
+  telefone        String   @unique
+  email           String?  @unique
+  senha           String
+  saldo           Float    @default(0)
+  saldoAfiliado   Float    @default(0)
+  totalComissao   Float    @default(0)
+  codigoIndicacao String   @unique
+  indicadoPor     Int?
+  totalApostas    Int      @default(0)
+
+  // 🆕 admin
+  isAdmin         Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+
+  @@index([indicadoPor])
+}
+
+enum ResultadoPartida {
+  GANHOU
+  PERDEU
+}
+
+model Partida {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  valorEntrada      Float
+  multiplicadorMeta Float
+  valorMeta         Float
+  status            String
+
+  resultado         ResultadoPartida?
+  valorFinal        Float?
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Deposito {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  valor     Float
+
+  status    String
+  txid      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Saque {
+  id        Int    @id @default(autoincrement())
+  userId    Int
+  valor     Float
+  chavePix  String
+  cpf       String?
+  status    String
+  txidTaxa  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
