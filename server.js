@@ -17,6 +17,12 @@ const allowedOrigins = [
   '192.168.100.64'
 ];
 
+const THEMES = {
+  PADRAO: "padrao",
+  COPA: "copa",
+  PASCOA: "pascoa"
+};
+
 app.use(cors({
 origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -63,6 +69,16 @@ process.on('beforeExit', async () => {
   await prisma.$disconnect();
 });
 
+async function initConfig() {
+  await prisma.config.upsert({
+    where: { chave: "theme" },
+    update: {},
+    create: { chave: "theme", valor: "padrao" }
+  });
+}
+
+initConfig();
+
 // ─────────────────────────────
 // TESTE
 // ─────────────────────────────
@@ -86,6 +102,29 @@ function adminMiddleware(req, res, next) {
       return res.status(500).json({ error: 'Erro interno' });
     });
 }
+
+app.post("/api/admin/theme", async (req, res) => {
+  try {
+    const { theme } = req.body;
+
+    const allowed = Object.values(THEMES);
+
+    if (!allowed.includes(theme)) {
+      return res.status(400).json({ error: "Tema inválido" });
+    }
+
+    await prisma.config.upsert({
+      where: { chave: "theme" },
+      update: { valor: theme },
+      create: { chave: "theme", valor: theme }
+    });
+
+    return res.json({ ok: true, theme });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erro interno" });
+  }
+});
 
 app.get('/api/admin/dashboard', adminMiddleware, async (req, res) => {
   try {
@@ -1252,14 +1291,19 @@ app.get('/api/game/configs', (req, res) => {
 // ─────────────────────────────
 // CONFIG PÚBLICA (LOGO / BRANDING)
 // ─────────────────────────────
-app.get('/api/public/config', (req, res) => {
+app.get('/api/public/config', async (req, res) => {
+  const theme = await prisma.config.findUnique({
+    where: { chave: "theme" }
+  });
+
   res.json({
     site_nome: "Bk Jump",
     site_suporte: "",
     site_promo: "🚀 O próximo salto pode mudar tudo.",
 
-    site_termos: `
+    theme: theme?.valor || "padrao",
 
+    site_termos: `
 Ao criar uma conta e utilizar a plataforma, o usuário declara que possui 18 anos ou mais e concorda com os presentes Termos de Uso.
 
 1. O usuário é responsável pelas informações fornecidas em seu cadastro e pela segurança de sua conta.
@@ -1279,7 +1323,6 @@ Ao criar uma conta e utilizar a plataforma, o usuário declara que possui 18 ano
 8. Ao utilizar a plataforma, o usuário reconhece que participa por sua própria conta e risco e concorda com todas as regras aqui estabelecidas.
 
 Em caso de dúvidas, entre em contato com o suporte da plataforma.
-
 `
   });
 });

@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Config {
+  id    Int    @id @default(autoincrement())
+  chave String @unique
+  valor String
+}
+
 model User {
   id              Int      @id @default(autoincrement())
   nome            String
