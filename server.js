@@ -1531,36 +1531,39 @@ app.post('/api/game/finalizar', async (req, res) => {
       });
     }
 
-    const plataformas = Number(plataformas_passadas || 0);
+const plataformas = Number(plataformas_passadas || 0);
 
-    let ganho = 0;
-    let valorFinal = 0;
-    let resultado = 'PERDEU';
+const valorPotencial =
+  plataformas *
+  Number(partida.valorPorPlataforma);
 
-    if (resgatou) {
+let ganho = 0;
+let valorFinal = 0;
+let resultado = 'PERDEU';
 
-      ganho =
-        plataformas *
-        Number(partida.valorPorPlataforma);
+if (resgatou) {
 
-      ganho = Number(ganho.toFixed(2));
+  ganho = Number(valorPotencial.toFixed(2));
 
+  valorFinal = ganho;
+  resultado = 'GANHOU';
 
-      valorFinal = ganho;
-      resultado = 'GANHOU';
-
-      await prisma.user.update({
-        where: {
-          id: user.id
-        },
-        data: {
-          saldo: {
-            increment: ganho
-          }
-        }
-      });
-
+  await prisma.user.update({
+    where: {
+      id: user.id
+    },
+    data: {
+      saldo: {
+        increment: ganho
+      }
     }
+  });
+
+} else {
+
+  valorFinal = Number(valorPotencial.toFixed(2));
+
+}
 
     await prisma.partida.update({
       where: {
