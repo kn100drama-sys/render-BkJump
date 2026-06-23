@@ -80,7 +80,9 @@ async function initConfig() {
   for (const cfg of defaults) {
     await prisma.config.upsert({
       where: { chave: cfg.chave },
-      update: {},
+      update: {
+        valor: cfg.valor
+      },
       create: cfg
     });
   }
@@ -1357,17 +1359,24 @@ app.post('/api/admin/game-config', adminMiddleware, async (req, res) => {
 // CONFIG PÚBLICA (LOGO / BRANDING)
 // ─────────────────────────────
 app.get('/api/public/config', async (req, res) => {
-  const theme = await prisma.config.findUnique({
-    where: { chave: "theme" }
-  });
+  const configs = await prisma.config.findMany();
+
+  const get = (key, def = null) =>
+    configs.find(c => c.chave === key)?.valor ?? def;
 
   res.json({
     site_nome: "Bk Jogue",
     site_suporte: "",
     site_promo: "🚀 O próximo salto pode mudar tudo.",
 
-    theme: theme?.valor || "padrao",
-    teste_gratis_ativo: true, 
+    theme: get("theme", "padrao"),
+    teste_gratis_ativo: true,
+
+    game: {
+      multiplicador: Number(get("game_multiplicador", 2)),
+      plataforma: Number(get("game_plataforma", 0.1)),
+      dificuldade: get("game_dificuldade", "normal")
+    },
 
     site_termos: `
 Ao criar uma conta e utilizar a plataforma, o usuário declara que possui 18 anos ou mais e concorda com os presentes Termos de Uso.
