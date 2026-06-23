@@ -9,7 +9,7 @@ const cors = require('cors');
 
 const allowedOrigins = [
   'https://helijump.netlify.app',
-  'https://bk-jogue.app',
+  'https://bk-jogue.top',
   'localhost',
   '127.0.0.1',
   'meusite.com',
@@ -1028,7 +1028,7 @@ app.get('/api/indicacao/info', async (req, res) => {
     // RESPONSE FINAL
     // ─────────────────────────────
     return res.json({
-      link: `https://bk-jogue.app/?ref=${user.codigoIndicacao}`,
+      link: `https://bk-jogue.top/?ref=${user.codigoIndicacao}`,
 
       total_indicados: indicados.length,
       total_com_deposito: totalComDeposito,
@@ -1149,7 +1149,7 @@ app.get('/api/indicacao/rede', async (req, res) => {
     const totalDepositos = n1TotalDep + n2TotalDep + n3TotalDep;
 
     return res.json({
-      link: `https://bk-jogue.app/?ref=${user.codigoIndicacao}`,
+      link: `https://bk-jogue.top/?ref=${user.codigoIndicacao}`,
 
       n1: {
         total: n1.length,
@@ -1333,7 +1333,7 @@ app.get('/api/public/config', async (req, res) => {
   });
 
   res.json({
-    site_nome: "Bk Jump",
+    site_nome: "Bk Jogue",
     site_suporte: "",
     site_promo: "🚀 O próximo salto pode mudar tudo.",
 
