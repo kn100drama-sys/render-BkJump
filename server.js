@@ -1360,6 +1360,8 @@ app.post('/api/admin/game-config', adminMiddleware, async (req, res) => {
 // ─────────────────────────────
 app.get('/api/public/config', async (req, res) => {
   const configs = await prisma.config.findMany();
+  const userId = getUserIdFromAuth(req);
+  const isLogged = !!userId;
 
   const get = (key, def = null) =>
     configs.find(c => c.chave === key)?.valor ?? def;
@@ -1367,10 +1369,10 @@ app.get('/api/public/config', async (req, res) => {
   res.json({
     site_nome: "Bk Jogue",
     site_suporte: "",
-    site_promo: "🚀 O próximo salto pode mudar tudo.",
+    site_promo: "",
 
     theme: get("theme", "padrao"),
-    teste_gratis_ativo: true,
+    teste_gratis_ativo: !isLogged,
 
     game: {
       multiplicador: Number(get("game_multiplicador", 2)),
@@ -1533,7 +1535,7 @@ app.put('/api/user/senha', async (req, res) => {
 // ─────────────────────────────
 app.get('/api/game/public-demo-config', (req, res) => {
   res.json({
-    dificuldade: 'normal',
+    dificuldade: 'facil',
     demo: true
   });
 });
