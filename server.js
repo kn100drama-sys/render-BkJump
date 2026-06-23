@@ -1315,13 +1315,33 @@ app.post('/api/game/heartbeat', async (req, res) => {
   }
 });
 
-app.get('/api/game/configs', (req, res) => {
-  res.json({
-    aposta_min: 1,
-    aposta_max: 1000,
-    multiplicador_min: 1,
-    multiplicador_max: 10
-  });
+app.post('/api/admin/game-config', adminMiddleware, async (req, res) => {
+  try {
+    const { multiplicador, porcentagem_plataforma, dificuldade } = req.body;
+
+    await prisma.config.upsert({
+      where: { chave: "game_multiplicador" },
+      update: { valor: String(multiplicador) },
+      create: { chave: "game_multiplicador", valor: String(multiplicador) }
+    });
+
+    await prisma.config.upsert({
+      where: { chave: "game_plataforma" },
+      update: { valor: String(porcentagem_plataforma) },
+      create: { chave: "game_plataforma", valor: String(porcentagem_plataforma) }
+    });
+
+    await prisma.config.upsert({
+      where: { chave: "game_dificuldade" },
+      update: { valor: dificuldade },
+      create: { chave: "game_dificuldade", valor: dificuldade }
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erro ao salvar config" });
+  }
 });
 
 // ─────────────────────────────
@@ -1547,24 +1567,46 @@ app.post('/api/game/iniciar', async (req, res) => {
       data: { saldo: novoSaldo }
     });
 
-    const mult = Number(multiplicador_meta || 2);
+const configs = await prisma.config.findMany();
 
-    const valorPorPlataforma =
-      Number(valor_entrada) * 0.10;
+const getConfig = (key, def = null) => {
+  const value = configs.find(c => c.chave === key)?.valor;
 
-    const partida = await prisma.partida.create({
-      data: {
-        userId: user.id,
-        valorEntrada: Number(valor_entrada),
-        multiplicadorMeta: mult,
-        valorMeta: Number(valor_entrada) * mult,
-        valorPorPlataforma,
-        plataformasPassadas: 0,
-        status: 'ativa',
-        resultado: null,
-        valorFinal: null
-      }
-    });
+  return value !== undefined && value !== null ? value : def;
+};
+
+// 🔥 MULTIPLICADOR (number seguro)
+const mult = Number(getConfig("game_multiplicador", multiplicador_meta || 2)) || 2;
+
+// 🔥 PLATAFORMA (%)
+const plataformaPercent = Number(getConfig("game_plataforma", 0.10)) || 0.10;
+
+// 🔥 DIFICULDADE (string - NÃO converter pra number)
+const dificuldade = getConfig("game_dificuldade", "normal");
+
+let chanceBase = 0.9;
+
+if (dificuldade === "facil") chanceBase = 0.7;
+if (dificuldade === "normal") chanceBase = 0.5;
+if (dificuldade === "dificil") chanceBase = 0.3;
+
+const valorPorPlataforma =
+  Number(valor_entrada) * plataformaPercent;
+
+const partida = await prisma.partida.create({
+  data: {
+    userId: user.id,
+    valorEntrada: Number(valor_entrada),
+    multiplicadorMeta: mult,
+    valorMeta: Number(valor_entrada) * mult,
+    valorPorPlataforma,
+    plataformasPassadas: 0,
+    status: 'ativa',
+    resultado: null,
+    valorFinal: null,
+    dificuldade
+  }
+});
 
     await prisma.user.update({
       where: { id: user.id },
