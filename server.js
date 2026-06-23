@@ -70,11 +70,20 @@ process.on('beforeExit', async () => {
 });
 
 async function initConfig() {
-  await prisma.config.upsert({
-    where: { chave: "theme" },
-    update: {},
-    create: { chave: "theme", valor: "padrao" }
-  });
+  const defaults = [
+    { chave: "theme", valor: "padrao" },
+    { chave: "game_multiplicador", valor: "2" },
+    { chave: "game_plataforma", valor: "0.1" },
+    { chave: "game_dificuldade", valor: "normal" }
+  ];
+
+  for (const cfg of defaults) {
+    await prisma.config.upsert({
+      where: { chave: cfg.chave },
+      update: {},
+      create: cfg
+    });
+  }
 }
 
 initConfig();
