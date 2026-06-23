@@ -1338,6 +1338,7 @@ app.get('/api/public/config', async (req, res) => {
     site_promo: "🚀 O próximo salto pode mudar tudo.",
 
     theme: theme?.valor || "padrao",
+    teste_gratis_ativo: true, 
 
     site_termos: `
 Ao criar uma conta e utilizar a plataforma, o usuário declara que possui 18 anos ou mais e concorda com os presentes Termos de Uso.
