@@ -56,6 +56,8 @@ model Partida {
 
   plataformasPassadas Int? @default(0)
 
+  dificuldade          String?
+
   createdAt         DateTime @default(now())
 
   @@index([userId])
