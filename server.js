@@ -334,18 +334,31 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { nome, telefone, senha, email, codigo_indicacao } = req.body;
 
-    // verifica se telefone já existe
-    const existe = await prisma.user.findUnique({
+    // verifica telefone
+    const telefoneExiste = await prisma.user.findUnique({
       where: { telefone }
     });
 
-    if (existe) {
+    if (telefoneExiste) {
       return res.status(400).json({
         error: 'Telefone já cadastrado'
       });
     }
 
-    // quem indicou (SALVA ID)
+    // verifica email
+    if (email) {
+      const emailExiste = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (emailExiste) {
+        return res.status(400).json({
+          error: 'E-mail já cadastrado'
+        });
+      }
+    }
+
+    // quem indicou
     let indicadoPor = null;
 
     if (codigo_indicacao) {
@@ -382,7 +395,30 @@ app.post('/api/auth/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+
+    // erros de campos únicos do Prisma
+    if (error.code === 'P2002') {
+
+      if (error.meta?.target?.includes('email')) {
+        return res.status(400).json({
+          error: 'E-mail já cadastrado'
+        });
+      }
+
+      if (error.meta?.target?.includes('telefone')) {
+        return res.status(400).json({
+          error: 'Telefone já cadastrado'
+        });
+      }
+
+      if (error.meta?.target?.includes('codigoIndicacao')) {
+        return res.status(400).json({
+          error: 'Erro ao gerar código de indicação'
+        });
+      }
+    }
+
+    console.error('Erro ao cadastrar:', error);
 
     return res.status(500).json({
       error: 'Erro ao cadastrar usuário'
