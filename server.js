@@ -332,7 +332,8 @@ app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
       saldo,
       saldoAfiliado,
       totalComissao,
-      isAdmin
+      isAdmin,
+      codigoIndicacao
     } = req.body;
 
     const user = await prisma.user.findUnique({
@@ -340,36 +341,39 @@ app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({
-        error: 'Usuário não encontrado'
-      });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const atualizado = await prisma.user.update({
+    const updateData = {
+      nome,
+      telefone,
+      email,
+      saldo: Number(saldo),
+      saldoAfiliado: Number(saldoAfiliado),
+      totalComissao: Number(totalComissao || 0),
+      isAdmin: isAdmin === true || isAdmin === 'true',
+      codigoIndicacao
+    };
+
+    // só atualiza senha se vier preenchida
+    if (senha && senha.trim() !== '') {
+      const bcrypt = require('bcryptjs');
+      updateData.senha = await bcrypt.hash(senha, 10);
+    }
+
+    const updated = await prisma.user.update({
       where: { id },
-      data: {
-        nome,
-        telefone,
-        email,
-        senha,
-        saldo: Number(saldo),
-        saldoAfiliado: Number(saldoAfiliado),
-        totalComissao: Number(totalComissao),
-        isAdmin: Boolean(isAdmin)
-      }
+      data: updateData
     });
 
-    res.json({
+    return res.json({
       success: true,
-      user: atualizado
+      user: updated
     });
 
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      error: 'Erro ao atualizar usuário'
-    });
+    return res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
 });
 
