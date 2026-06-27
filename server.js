@@ -320,6 +320,59 @@ app.get('/api/admin/users', adminMiddleware, async (req, res) => {
   res.json(users);
 });
 
+app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const {
+      nome,
+      telefone,
+      email,
+      senha,
+      saldo,
+      saldoAfiliado,
+      totalComissao,
+      isAdmin
+    } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Usuário não encontrado'
+      });
+    }
+
+    const atualizado = await prisma.user.update({
+      where: { id },
+      data: {
+        nome,
+        telefone,
+        email,
+        senha,
+        saldo: Number(saldo),
+        saldoAfiliado: Number(saldoAfiliado),
+        totalComissao: Number(totalComissao),
+        isAdmin: Boolean(isAdmin)
+      }
+    });
+
+    res.json({
+      success: true,
+      user: atualizado
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: 'Erro ao atualizar usuário'
+    });
+  }
+});
+
 app.get('/api/admin/depositos', adminMiddleware, async (req, res) => {
   const data = await prisma.deposito.findMany({
     orderBy: { id: 'desc' }
