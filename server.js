@@ -357,8 +357,7 @@ app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
 
     // só atualiza senha se vier preenchida
     if (senha && senha.trim() !== '') {
-      const bcrypt = require('bcryptjs');
-      updateData.senha = await bcrypt.hash(senha, 10);
+      updateData.senha = senha;
     }
 
     const updated = await prisma.user.update({
